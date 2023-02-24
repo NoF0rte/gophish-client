@@ -2,7 +2,6 @@ package phish
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -49,12 +48,19 @@ func (c *Client) TrackOpen(rid string, opts ...TrackOption) (*http.Response, err
 		opt(options)
 	}
 
-	u, err := url.JoinPath(c.url, fmt.Sprintf("track?rid=%s", rid))
+	u, err := url.Parse(c.url)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, u, nil)
+	u = u.JoinPath("track")
+
+	query := u.Query()
+	query.Set("rid", rid)
+
+	u.RawQuery = query.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +82,17 @@ func (c *Client) TrackClick(rid string, opts ...TrackOption) (*http.Response, er
 		opt(options)
 	}
 
-	u, err := url.JoinPath(c.url, fmt.Sprintf("?rid=%s", rid))
+	u, err := url.Parse(c.url)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodGet, u, nil)
+	query := u.Query()
+	query.Set("rid", rid)
+
+	u.RawQuery = query.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
