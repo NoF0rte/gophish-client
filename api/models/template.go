@@ -4,9 +4,15 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"gopkg.in/yaml.v2"
+)
+
+const (
+	trackingText string = "{{.Tracker}}"
 )
 
 // Template models hold the attributes for an e-mail template to be sent to targets
@@ -23,6 +29,7 @@ type Template struct {
 	Attachments    []Attachment    `json:"attachments" yaml:"-"`
 	ProfileFile    string          `json:"-" yaml:"profile-file,omitempty"`
 	Profile        *SendingProfile `json:"-" yaml:"profile,omitempty"`
+	TrackingImage  bool            `json:"-" yaml:"tracking-image"`
 }
 
 func (t *Template) ToJSON() (string, error) {
@@ -32,6 +39,26 @@ func (t *Template) ToJSON() (string, error) {
 	}
 
 	return string(data), nil
+}
+
+func (t *Template) AddTrackingImage() error {
+	if strings.Contains(t.HTML, trackingText) {
+		return nil
+	}
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(t.HTML))
+	if err != nil {
+		return err
+	}
+
+	doc.Find("body").AppendHtml(trackingText)
+	html, err := doc.Html()
+	if err != nil {
+		return err
+	}
+	t.HTML = html
+
+	return nil
 }
 
 func (t *Template) replaceVars(vars map[string]string) error {
