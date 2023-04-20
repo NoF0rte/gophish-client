@@ -6,22 +6,9 @@ import (
 	"net/url"
 )
 
-type TrackOption func(*trackOptions)
-type trackOptions struct {
-	userAgent string
-	clientIP  string
-}
-
-func WithUserAgent(userAgent string) TrackOption {
-	return func(to *trackOptions) {
-		to.userAgent = userAgent
-	}
-}
-
-func WithClientIP(ip string) TrackOption {
-	return func(to *trackOptions) {
-		to.clientIP = ip
-	}
+type TrackOptions struct {
+	UserAgent string
+	ClientIP  string
 }
 
 type Client struct {
@@ -42,10 +29,15 @@ func NewClient(url string) *Client {
 	}
 }
 
-func (c *Client) TrackOpen(rid string, opts ...TrackOption) (*http.Response, error) {
-	options := &trackOptions{}
+func (c *Client) TrackOpen(rid string, opts ...TrackOptions) (*http.Response, error) {
+	options := &TrackOptions{}
 	for _, opt := range opts {
-		opt(options)
+		if opt.ClientIP != "" {
+			options.ClientIP = opt.ClientIP
+		}
+		if opt.UserAgent != "" {
+			options.UserAgent = opt.UserAgent
+		}
 	}
 
 	u, err := url.Parse(c.url)
@@ -65,21 +57,26 @@ func (c *Client) TrackOpen(rid string, opts ...TrackOption) (*http.Response, err
 		return nil, err
 	}
 
-	if options.userAgent != "" {
-		req.Header.Set("User-Agent", options.userAgent)
+	if options.UserAgent != "" {
+		req.Header.Set("User-Agent", options.UserAgent)
 	}
 
-	if options.clientIP != "" {
-		req.Header.Set("X-Forwarded-For", options.clientIP)
+	if options.ClientIP != "" {
+		req.Header.Set("X-Forwarded-For", options.ClientIP)
 	}
 
 	return c.client.Do(req)
 }
 
-func (c *Client) TrackClick(rid string, opts ...TrackOption) (*http.Response, error) {
-	options := &trackOptions{}
+func (c *Client) TrackClick(rid string, opts ...TrackOptions) (*http.Response, error) {
+	options := &TrackOptions{}
 	for _, opt := range opts {
-		opt(options)
+		if opt.ClientIP != "" {
+			options.ClientIP = opt.ClientIP
+		}
+		if opt.UserAgent != "" {
+			options.UserAgent = opt.UserAgent
+		}
 	}
 
 	u, err := url.Parse(c.url)
@@ -97,12 +94,12 @@ func (c *Client) TrackClick(rid string, opts ...TrackOption) (*http.Response, er
 		return nil, err
 	}
 
-	if options.userAgent != "" {
-		req.Header.Set("User-Agent", options.userAgent)
+	if options.UserAgent != "" {
+		req.Header.Set("User-Agent", options.UserAgent)
 	}
 
-	if options.clientIP != "" {
-		req.Header.Set("X-Forwarded-For", options.clientIP)
+	if options.ClientIP != "" {
+		req.Header.Set("X-Forwarded-For", options.ClientIP)
 	}
 
 	return c.client.Do(req)
