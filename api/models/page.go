@@ -13,3 +13,12 @@ type Page struct {
 	RedirectURL        string    `json:"redirect_url" yaml:"redirect-url"`
 	varsReplaced       bool
 }
+
+type ImportSite struct {
+	URL              string `json:"url"`
+	IncludeResources bool   `json:"include_resources"`
+}
+
+type ImportedSite struct {
+	HTML string `json:"html"`
+}

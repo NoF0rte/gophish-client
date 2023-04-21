@@ -297,6 +297,52 @@ func (c *Client) GetLandingPages() ([]*models.Page, error) {
 	return pages, nil
 }
 
+func (c *Client) GetLandingPageByID(id int) (*models.Page, error) {
+	page := &models.Page{}
+	_, _, err := c.get(fmt.Sprintf("/api/pages/%d", id), page)
+	if err != nil {
+		return nil, err
+	}
+
+	if page.ID == 0 {
+		return nil, nil
+	}
+
+	return page, nil
+}
+
+func (c *Client) GetLandingPageByName(name string) (*models.Page, error) {
+	pages, err := c.GetLandingPages()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range pages {
+		if t.Name == name {
+			return t, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (c *Client) GetLandingPageByRegex(re string) ([]*models.Page, error) {
+	pages, err := c.GetLandingPages()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []*models.Page
+	regex := regexp.MustCompile(re)
+	for _, p := range pages {
+		if regex.MatchString(p.Name) {
+			filtered = append(filtered, p)
+		}
+	}
+
+	return filtered, nil
+}
+
 func (c *Client) DeleteTemplateByID(id int64) (*models.GenericResponse, error) {
 	r := &models.GenericResponse{}
 	_, _, err := c.delete(fmt.Sprintf("/api/templates/%d", id), nil, r)
@@ -354,6 +400,17 @@ func (c *Client) CreateSendingProfile(profile *models.SendingProfile) (*models.S
 	return result.(*models.SendingProfile), nil
 }
 
+func (c *Client) CreateLandingPage(page *models.Page) (*models.Page, error) {
+	page.ID = 0 // Ensure the ID is always 0
+
+	_, result, err := c.post("/api/pages/", page, &models.Page{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Page), nil
+}
+
 func (c *Client) UpdateTemplate(id int64, template *models.Template) (*models.Template, error) {
 	template.ID = id
 	_, result, err := c.put(fmt.Sprintf("/api/templates/%d", id), template, &models.Template{})
@@ -372,6 +429,16 @@ func (c *Client) UpdateSendingProfile(id int64, profile *models.SendingProfile) 
 	}
 
 	return result.(*models.SendingProfile), nil
+}
+
+func (c *Client) UpdateLandingPage(id int64, page *models.Page) (*models.Page, error) {
+	page.ID = id
+	_, result, err := c.put(fmt.Sprintf("/api/pages/%d", id), page, &models.Page{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Page), nil
 }
 
 func (c *Client) DeleteSendingProfileByID(id int64) (*models.GenericResponse, error) {
@@ -403,4 +470,44 @@ func (c *Client) DeleteSendingProfileByName(name string) (*models.GenericRespons
 	}
 
 	return c.DeleteSendingProfileByID(profile.ID)
+}
+
+func (c *Client) DeleteLandingPageByID(id int64) (*models.GenericResponse, error) {
+	r := &models.GenericResponse{}
+	_, _, err := c.delete(fmt.Sprintf("/api/pages/%d", id), nil, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (c *Client) DeleteLandingPageByName(name string) (*models.GenericResponse, error) {
+	pages, err := c.GetLandingPages()
+	if err != nil {
+		return nil, err
+	}
+
+	var page *models.Page
+	for _, p := range pages {
+		if p.Name == name {
+			page = p
+			break
+		}
+	}
+
+	if page == nil {
+		return nil, fmt.Errorf("landing page %s not found", name)
+	}
+
+	return c.DeleteLandingPageByID(page.ID)
+}
+
+func (c *Client) ImportSite(req models.ImportSite) (string, error) {
+	_, result, err := c.post("/api/import/site", &req, &models.ImportedSite{})
+	if err != nil {
+		return "", err
+	}
+
+	return (result.(*models.ImportedSite)).HTML, nil
 }
