@@ -277,6 +277,16 @@ func (c *Client) GetSendingProfileByRegex(re string) ([]*models.SendingProfile, 
 	return filtered, nil
 }
 
+func (c *Client) GetCampaigns() ([]*models.Campaign, error) {
+	var campaigns []*models.Campaign
+	_, _, err := c.get("/api/campaigns/", &campaigns)
+	if err != nil {
+		return nil, err
+	}
+
+	return campaigns, nil
+}
+
 func (c *Client) DeleteTemplateByID(id int64) (*models.GenericResponse, error) {
 	r := &models.GenericResponse{}
 	_, _, err := c.delete(fmt.Sprintf("/api/templates/%d", id), nil, r)
@@ -334,6 +344,16 @@ func (c *Client) CreateSendingProfile(profile *models.SendingProfile) (*models.S
 	return result.(*models.SendingProfile), nil
 }
 
+func (c *Client) UpdateTemplate(id int64, template *models.Template) (*models.Template, error) {
+	template.ID = id
+	_, result, err := c.put(fmt.Sprintf("/api/templates/%d", id), template, &models.Template{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Template), nil
+}
+
 func (c *Client) UpdateSendingProfile(id int64, profile *models.SendingProfile) (*models.SendingProfile, error) {
 	profile.ID = id
 	_, result, err := c.put(fmt.Sprintf("/api/smtp/%d", id), profile, &models.SendingProfile{})
@@ -373,14 +393,4 @@ func (c *Client) DeleteSendingProfileByName(name string) (*models.GenericRespons
 	}
 
 	return c.DeleteSendingProfileByID(profile.ID)
-}
-
-func (c *Client) GetCampaigns() ([]*models.Campaign, error) {
-	var campaigns []*models.Campaign
-	_, _, err := c.get("/api/campaigns/", &campaigns)
-	if err != nil {
-		return nil, err
-	}
-
-	return campaigns, nil
 }
