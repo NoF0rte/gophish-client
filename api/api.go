@@ -287,6 +287,16 @@ func (c *Client) GetCampaigns() ([]*models.Campaign, error) {
 	return campaigns, nil
 }
 
+func (c *Client) GetLandingPages() ([]*models.Page, error) {
+	var pages []*models.Page
+	_, _, err := c.get("/api/pages/", &pages)
+	if err != nil {
+		return nil, err
+	}
+
+	return pages, nil
+}
+
 func (c *Client) DeleteTemplateByID(id int64) (*models.GenericResponse, error) {
 	r := &models.GenericResponse{}
 	_, _, err := c.delete(fmt.Sprintf("/api/templates/%d", id), nil, r)
