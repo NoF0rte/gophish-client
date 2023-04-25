@@ -287,6 +287,52 @@ func (c *Client) GetCampaigns() ([]*models.Campaign, error) {
 	return campaigns, nil
 }
 
+func (c *Client) GetCampaignByID(id int) (*models.Campaign, error) {
+	campaign := &models.Campaign{}
+	_, _, err := c.get(fmt.Sprintf("/api/campaigns/%d", id), campaign)
+	if err != nil {
+		return nil, err
+	}
+
+	if campaign.ID == 0 {
+		return nil, nil
+	}
+
+	return campaign, nil
+}
+
+func (c *Client) GetCampaignByName(name string) (*models.Campaign, error) {
+	campaigns, err := c.GetCampaigns()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, c := range campaigns {
+		if c.Name == name {
+			return c, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (c *Client) GetCampaignByRegex(re string) ([]*models.Campaign, error) {
+	campaigns, err := c.GetCampaigns()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []*models.Campaign
+	regex := regexp.MustCompile(re)
+	for _, c := range campaigns {
+		if regex.MatchString(c.Name) {
+			filtered = append(filtered, c)
+		}
+	}
+
+	return filtered, nil
+}
+
 func (c *Client) GetLandingPages() ([]*models.Page, error) {
 	var pages []*models.Page
 	_, _, err := c.get("/api/pages/", &pages)
@@ -532,6 +578,50 @@ func (c *Client) CreateGroup(group *models.Group) (*models.Group, error) {
 	}
 
 	return result.(*models.Group), nil
+}
+
+func (c *Client) CreateCampaign(campaign *models.Campaign) (*models.Campaign, error) {
+	newCampaign := &models.Campaign{
+		Name:       campaign.Name,
+		URL:        campaign.URL,
+		LaunchDate: campaign.LaunchDate,
+		SendByDate: campaign.SendByDate,
+	}
+
+	if campaign.Template != nil {
+		newCampaign.Template = &models.Template{
+			Name: campaign.Template.Name,
+		}
+	}
+
+	if campaign.Page != nil {
+		newCampaign.Page = &models.Page{
+			Name: campaign.Page.Name,
+		}
+	}
+
+	if campaign.SMTP != nil {
+		newCampaign.SMTP = &models.SendingProfile{
+			Name: campaign.SMTP.Name,
+		}
+	}
+
+	if len(campaign.Groups) > 0 {
+		var groups []*models.Group
+		for _, g := range campaign.Groups {
+			groups = append(groups, &models.Group{
+				Name: g.Name,
+			})
+		}
+		newCampaign.Groups = groups
+	}
+
+	_, result, err := c.post("/api/campaigns/", newCampaign, &models.Campaign{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Campaign), nil
 }
 
 func (c *Client) UpdateTemplate(id int64, template *models.Template) (*models.Template, error) {
