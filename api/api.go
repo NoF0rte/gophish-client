@@ -343,6 +343,118 @@ func (c *Client) GetLandingPageByRegex(re string) ([]*models.Page, error) {
 	return filtered, nil
 }
 
+func (c *Client) GetGroups() ([]*models.Group, error) {
+	var groups []*models.Group
+	_, _, err := c.get("/api/groups/", &groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func (c *Client) GetGroupByID(id int) (*models.Group, error) {
+	group := &models.Group{}
+	_, _, err := c.get(fmt.Sprintf("/api/groups/%d", id), group)
+	if err != nil {
+		return nil, err
+	}
+
+	if group.ID == 0 {
+		return nil, nil
+	}
+
+	return group, nil
+}
+
+func (c *Client) GetGroupByName(name string) (*models.Group, error) {
+	groups, err := c.GetGroups()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, g := range groups {
+		if g.Name == name {
+			return g, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (c *Client) GetGroupByRegex(re string) ([]*models.Group, error) {
+	groups, err := c.GetGroups()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []*models.Group
+	regex := regexp.MustCompile(re)
+	for _, g := range groups {
+		if regex.MatchString(g.Name) {
+			filtered = append(filtered, g)
+		}
+	}
+
+	return filtered, nil
+}
+
+func (c *Client) GetGroupsSummary() ([]*models.GroupSummary, error) {
+	var groups []*models.GroupSummary
+	_, _, err := c.get("/api/groups/summary", &groups)
+	if err != nil {
+		return nil, err
+	}
+
+	return groups, nil
+}
+
+func (c *Client) GetGroupSummaryByID(id int) (*models.GroupSummary, error) {
+	group := &models.GroupSummary{}
+	_, _, err := c.get(fmt.Sprintf("/api/groups/%d/summary", id), group)
+	if err != nil {
+		return nil, err
+	}
+
+	if group.ID == 0 {
+		return nil, nil
+	}
+
+	return group, nil
+}
+
+func (c *Client) GetGroupSummaryByName(name string) (*models.GroupSummary, error) {
+	groups, err := c.GetGroupsSummary()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, g := range groups {
+		if g.Name == name {
+			return g, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (c *Client) GetGroupSummaryByRegex(re string) ([]*models.GroupSummary, error) {
+	groups, err := c.GetGroupsSummary()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []*models.GroupSummary
+	regex := regexp.MustCompile(re)
+	for _, g := range groups {
+		if regex.MatchString(g.Name) {
+			filtered = append(filtered, g)
+		}
+	}
+
+	return filtered, nil
+}
+
 func (c *Client) DeleteTemplateByID(id int64) (*models.GenericResponse, error) {
 	r := &models.GenericResponse{}
 	_, _, err := c.delete(fmt.Sprintf("/api/templates/%d", id), nil, r)
@@ -411,6 +523,17 @@ func (c *Client) CreateLandingPage(page *models.Page) (*models.Page, error) {
 	return result.(*models.Page), nil
 }
 
+func (c *Client) CreateGroup(group *models.Group) (*models.Group, error) {
+	group.ID = 0 // Ensure the ID is always 0
+
+	_, result, err := c.post("/api/groups/", group, &models.Group{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Group), nil
+}
+
 func (c *Client) UpdateTemplate(id int64, template *models.Template) (*models.Template, error) {
 	template.ID = id
 	_, result, err := c.put(fmt.Sprintf("/api/templates/%d", id), template, &models.Template{})
@@ -441,6 +564,16 @@ func (c *Client) UpdateLandingPage(id int64, page *models.Page) (*models.Page, e
 	return result.(*models.Page), nil
 }
 
+func (c *Client) UpdateGroup(id int64, group *models.Group) (*models.Group, error) {
+	group.ID = id
+	_, result, err := c.put(fmt.Sprintf("/api/groups/%d", id), group, &models.Group{})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*models.Group), nil
+}
+
 func (c *Client) DeleteSendingProfileByID(id int64) (*models.GenericResponse, error) {
 	r := &models.GenericResponse{}
 	_, _, err := c.delete(fmt.Sprintf("/api/smtp/%d", id), nil, r)
@@ -452,17 +585,9 @@ func (c *Client) DeleteSendingProfileByID(id int64) (*models.GenericResponse, er
 }
 
 func (c *Client) DeleteSendingProfileByName(name string) (*models.GenericResponse, error) {
-	profiles, err := c.GetSendingProfiles()
+	profile, err := c.GetSendingProfileByName(name)
 	if err != nil {
 		return nil, err
-	}
-
-	var profile *models.SendingProfile
-	for _, s := range profiles {
-		if s.Name == name {
-			profile = s
-			break
-		}
 	}
 
 	if profile == nil {
@@ -483,17 +608,9 @@ func (c *Client) DeleteLandingPageByID(id int64) (*models.GenericResponse, error
 }
 
 func (c *Client) DeleteLandingPageByName(name string) (*models.GenericResponse, error) {
-	pages, err := c.GetLandingPages()
+	page, err := c.GetLandingPageByName(name)
 	if err != nil {
 		return nil, err
-	}
-
-	var page *models.Page
-	for _, p := range pages {
-		if p.Name == name {
-			page = p
-			break
-		}
 	}
 
 	if page == nil {
@@ -501,6 +618,29 @@ func (c *Client) DeleteLandingPageByName(name string) (*models.GenericResponse, 
 	}
 
 	return c.DeleteLandingPageByID(page.ID)
+}
+
+func (c *Client) DeleteGroupByID(id int64) (*models.GenericResponse, error) {
+	r := &models.GenericResponse{}
+	_, _, err := c.delete(fmt.Sprintf("/api/groups/%d", id), nil, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r, nil
+}
+
+func (c *Client) DeleteGroupByName(name string) (*models.GenericResponse, error) {
+	group, err := c.GetGroupByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if group == nil {
+		return nil, fmt.Errorf("group %s not found", name)
+	}
+
+	return c.DeleteGroupByID(group.ID)
 }
 
 func (c *Client) ImportSite(req models.ImportSite) (string, error) {

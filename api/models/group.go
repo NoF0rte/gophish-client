@@ -13,3 +13,10 @@ type Target struct {
 	LastName  string `json:"last_name" yaml:"last_name"`
 	Position  string `json:"position" yaml:"position"`
 }
+
+type GroupSummary struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	NumTargets   int    `json:"num_targets"`
+	ModifiedDate string `json:"modified_date"`
+}
