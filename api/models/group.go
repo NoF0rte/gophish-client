@@ -1,12 +1,25 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Group struct {
 	ID           int64     `json:"id" yaml:"id"`
 	Name         string    `json:"name" yaml:"name"`
-	Targets      []Target  `json:"targets" yaml:"targets"`
+	NumTargets   int64     `json:"num_targets,omitempty" yaml:"-"`
+	Targets      []Target  `json:"targets,omitempty" yaml:"targets"`
 	ModifiedDate time.Time `json:"modified_date" yaml:"-"`
+}
+
+func (g *Group) ToJSON() (string, error) {
+	data, err := json.MarshalIndent(g, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 type Target struct {
@@ -16,9 +29,7 @@ type Target struct {
 	Position  string `json:"position" yaml:"position"`
 }
 
-type GroupSummary struct {
-	ID           int64     `json:"id"`
-	Name         string    `json:"name"`
-	NumTargets   int       `json:"num_targets"`
-	ModifiedDate time.Time `json:"modified_date"`
+type GroupsSummary struct {
+	Total  int      `json:"total"`
+	Groups []*Group `json:"groups"`
 }

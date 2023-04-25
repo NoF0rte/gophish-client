@@ -260,7 +260,7 @@ func (c *Client) GetSendingProfileByName(name string) (*models.SendingProfile, e
 	return nil, nil
 }
 
-func (c *Client) GetSendingProfileByRegex(re string) ([]*models.SendingProfile, error) {
+func (c *Client) GetSendingProfilesByRegex(re string) ([]*models.SendingProfile, error) {
 	profiles, err := c.GetSendingProfiles()
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func (c *Client) GetCampaignByName(name string) (*models.Campaign, error) {
 	return nil, nil
 }
 
-func (c *Client) GetCampaignByRegex(re string) ([]*models.Campaign, error) {
+func (c *Client) GetCampaignsByRegex(re string) ([]*models.Campaign, error) {
 	campaigns, err := c.GetCampaigns()
 	if err != nil {
 		return nil, err
@@ -372,7 +372,7 @@ func (c *Client) GetLandingPageByName(name string) (*models.Page, error) {
 	return nil, nil
 }
 
-func (c *Client) GetLandingPageByRegex(re string) ([]*models.Page, error) {
+func (c *Client) GetLandingPagesByRegex(re string) ([]*models.Page, error) {
 	pages, err := c.GetLandingPages()
 	if err != nil {
 		return nil, err
@@ -428,7 +428,7 @@ func (c *Client) GetGroupByName(name string) (*models.Group, error) {
 	return nil, nil
 }
 
-func (c *Client) GetGroupByRegex(re string) ([]*models.Group, error) {
+func (c *Client) GetGroupsByRegex(re string) ([]*models.Group, error) {
 	groups, err := c.GetGroups()
 	if err != nil {
 		return nil, err
@@ -445,18 +445,18 @@ func (c *Client) GetGroupByRegex(re string) ([]*models.Group, error) {
 	return filtered, nil
 }
 
-func (c *Client) GetGroupsSummary() ([]*models.GroupSummary, error) {
-	var groups []*models.GroupSummary
-	_, _, err := c.get("/api/groups/summary", &groups)
+func (c *Client) GetGroupsSummary() ([]*models.Group, error) {
+	summary := &models.GroupsSummary{}
+	_, _, err := c.get("/api/groups/summary", summary)
 	if err != nil {
 		return nil, err
 	}
 
-	return groups, nil
+	return summary.Groups, nil
 }
 
-func (c *Client) GetGroupSummaryByID(id int) (*models.GroupSummary, error) {
-	group := &models.GroupSummary{}
+func (c *Client) GetGroupSummaryByID(id int) (*models.Group, error) {
+	group := &models.Group{}
 	_, _, err := c.get(fmt.Sprintf("/api/groups/%d/summary", id), group)
 	if err != nil {
 		return nil, err
@@ -469,7 +469,7 @@ func (c *Client) GetGroupSummaryByID(id int) (*models.GroupSummary, error) {
 	return group, nil
 }
 
-func (c *Client) GetGroupSummaryByName(name string) (*models.GroupSummary, error) {
+func (c *Client) GetGroupSummaryByName(name string) (*models.Group, error) {
 	groups, err := c.GetGroupsSummary()
 	if err != nil {
 		return nil, err
@@ -484,13 +484,13 @@ func (c *Client) GetGroupSummaryByName(name string) (*models.GroupSummary, error
 	return nil, nil
 }
 
-func (c *Client) GetGroupSummaryByRegex(re string) ([]*models.GroupSummary, error) {
+func (c *Client) GetGroupsSummaryByRegex(re string) ([]*models.Group, error) {
 	groups, err := c.GetGroupsSummary()
 	if err != nil {
 		return nil, err
 	}
 
-	var filtered []*models.GroupSummary
+	var filtered []*models.Group
 	regex := regexp.MustCompile(re)
 	for _, g := range groups {
 		if regex.MatchString(g.Name) {

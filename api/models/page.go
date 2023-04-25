@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Page struct {
 	ID                 int64     `json:"id" yaml:"-"`
@@ -12,6 +15,15 @@ type Page struct {
 	ModifiedDate       time.Time `json:"modified_date" yaml:"-"`
 	RedirectURL        string    `json:"redirect_url" yaml:"redirect-url"`
 	varsReplaced       bool
+}
+
+func (p *Page) ToJSON() (string, error) {
+	data, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 type ImportSite struct {
