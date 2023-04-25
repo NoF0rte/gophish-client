@@ -14,8 +14,8 @@ type Group struct {
 	ID           int64     `json:"id" yaml:"-"`
 	Name         string    `json:"name" yaml:"name"`
 	NumTargets   int64     `json:"num_targets,omitempty" yaml:"-"`
-	Targets      []*Target `json:"targets,omitempty" yaml:"targets"`
-	TargetsFile  string    `json:"-" yaml:"targets-file"`
+	Targets      []*Target `json:"targets,omitempty" yaml:"targets,omitempty"`
+	TargetsFile  string    `json:"-" yaml:"targets-file,omitempty"`
 	ModifiedDate time.Time `json:"modified_date" yaml:"-"`
 	varsReplaced bool
 }
