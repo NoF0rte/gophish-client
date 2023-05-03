@@ -2,7 +2,10 @@ package models
 
 import (
 	"encoding/json"
+	"os"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Campaign struct {
@@ -20,6 +23,7 @@ type Campaign struct {
 	Timeline      []*Event        `json:"timeline,omitempty" yaml:"timeline"`
 	SMTP          *SendingProfile `json:"smtp" yaml:"smtp"`
 	URL           string          `json:"url" yaml:"url"`
+	varsReplaced  bool
 }
 
 func (c *Campaign) ToJSON() (string, error) {
@@ -29,6 +33,79 @@ func (c *Campaign) ToJSON() (string, error) {
 	}
 
 	return string(data), nil
+}
+
+func (c *Campaign) replaceVars(vars map[string]string) error {
+	if c.varsReplaced {
+		return nil
+	}
+
+	name, err := templateReplace(c.Name, vars)
+	if err != nil {
+		return err
+	}
+	c.Name = name
+
+	url, err := templateReplace(c.URL, vars)
+	if err != nil {
+		return err
+	}
+	c.URL = url
+
+	if c.Template != nil {
+		name, err = templateReplace(c.Template.Name, vars)
+		if err != nil {
+			return err
+		}
+		c.Template.Name = name
+	}
+
+	if c.Page != nil {
+		name, err = templateReplace(c.Page.Name, vars)
+		if err != nil {
+			return err
+		}
+		c.Page.Name = name
+	}
+
+	if c.SMTP != nil {
+		name, err = templateReplace(c.SMTP.Name, vars)
+		if err != nil {
+			return err
+		}
+		c.SMTP.Name = name
+	}
+
+	for _, group := range c.Groups {
+		name, err = templateReplace(group.Name, vars)
+		if err != nil {
+			return err
+		}
+		group.Name = name
+	}
+
+	c.varsReplaced = true
+	return nil
+}
+
+func CampaignFromFile(file string, vars map[string]string) (*Campaign, error) {
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var campaign Campaign
+	err = yaml.Unmarshal(bytes, &campaign)
+	if err != nil {
+		return nil, err
+	}
+
+	err = campaign.replaceVars(vars)
+	if err != nil {
+		return nil, err
+	}
+
+	return &campaign, nil
 }
 
 type Result struct {
