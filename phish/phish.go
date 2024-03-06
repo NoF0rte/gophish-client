@@ -9,6 +9,7 @@ import (
 type TrackOptions struct {
 	UserAgent string
 	ClientIP  string
+	RIDName   string
 }
 
 type Client struct {
@@ -30,13 +31,18 @@ func NewClient(url string) *Client {
 }
 
 func (c *Client) TrackOpen(rid string, opts ...TrackOptions) (*http.Response, error) {
-	options := &TrackOptions{}
+	options := &TrackOptions{
+		RIDName: "rid",
+	}
 	for _, opt := range opts {
 		if opt.ClientIP != "" {
 			options.ClientIP = opt.ClientIP
 		}
 		if opt.UserAgent != "" {
 			options.UserAgent = opt.UserAgent
+		}
+		if opt.RIDName != "" {
+			options.RIDName = opt.RIDName
 		}
 	}
 
@@ -48,7 +54,7 @@ func (c *Client) TrackOpen(rid string, opts ...TrackOptions) (*http.Response, er
 	u = u.JoinPath("track")
 
 	query := u.Query()
-	query.Set("rid", rid)
+	query.Set(options.RIDName, rid)
 
 	u.RawQuery = query.Encode()
 
@@ -69,13 +75,18 @@ func (c *Client) TrackOpen(rid string, opts ...TrackOptions) (*http.Response, er
 }
 
 func (c *Client) TrackClick(rid string, opts ...TrackOptions) (*http.Response, error) {
-	options := &TrackOptions{}
+	options := &TrackOptions{
+		RIDName: "rid",
+	}
 	for _, opt := range opts {
 		if opt.ClientIP != "" {
 			options.ClientIP = opt.ClientIP
 		}
 		if opt.UserAgent != "" {
 			options.UserAgent = opt.UserAgent
+		}
+		if opt.RIDName != "" {
+			options.RIDName = opt.RIDName
 		}
 	}
 
@@ -85,7 +96,7 @@ func (c *Client) TrackClick(rid string, opts ...TrackOptions) (*http.Response, e
 	}
 
 	query := u.Query()
-	query.Set("rid", rid)
+	query.Set(options.RIDName, rid)
 
 	u.RawQuery = query.Encode()
 
