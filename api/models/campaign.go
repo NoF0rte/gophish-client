@@ -109,16 +109,18 @@ func CampaignFromFile(file string, vars map[string]string) (*Campaign, error) {
 }
 
 type Result struct {
-	ID        string  `json:"id"`
-	FirstName string  `json:"first_name"`
-	LastName  string  `json:"last_name"`
-	Position  string  `json:"position"`
-	Status    string  `json:"status"`
-	IP        string  `json:"ip"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	SendDate  string  `json:"send_date"`
-	Reported  bool    `json:"reported"`
+	ID           string  `json:"id"`
+	Email        string  `json:"email"`
+	FirstName    string  `json:"first_name"`
+	LastName     string  `json:"last_name"`
+	Position     string  `json:"position"`
+	Status       string  `json:"status"`
+	IP           string  `json:"ip"`
+	Latitude     float64 `json:"latitude"`
+	Longitude    float64 `json:"longitude"`
+	SendDate     string  `json:"send_date"`
+	ModifiedDate string  `json:"modified_date"`
+	Reported     bool    `json:"reported"`
 }
 
 type Event struct {
