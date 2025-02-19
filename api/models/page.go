@@ -2,7 +2,11 @@ package models
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Page struct {
@@ -24,6 +28,65 @@ func (p *Page) ToJSON() (string, error) {
 	}
 
 	return string(data), nil
+}
+
+func (p *Page) replaceVars(vars map[string]string) error {
+	if p.varsReplaced {
+		return nil
+	}
+
+	name, err := templateReplace(p.Name, vars)
+	if err != nil {
+		return err
+	}
+	p.Name = name
+
+	html, err := templateReplace(p.HTML, vars)
+	if err != nil {
+		return err
+	}
+	p.HTML = html
+
+	redirectURL, err := templateReplace(p.RedirectURL, vars)
+	if err != nil {
+		return err
+	}
+	p.RedirectURL = redirectURL
+
+	p.varsReplaced = true
+	return nil
+}
+
+func PageFromFile(file string, vars map[string]string) (*Page, error) {
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var page Page
+	err = yaml.Unmarshal(bytes, &page)
+	if err != nil {
+		return nil, err
+	}
+
+	parentDir := filepath.Dir(file)
+	if page.HTML == "" && page.HTMLFile != "" {
+		htmlPath := filepath.Join(parentDir, page.HTMLFile)
+
+		html, err := os.ReadFile(htmlPath)
+		if err != nil {
+			return nil, err
+		}
+
+		page.HTML = string(html)
+	}
+
+	err = page.replaceVars(vars)
+	if err != nil {
+		return nil, err
+	}
+
+	return &page, nil
 }
 
 type ImportSite struct {
