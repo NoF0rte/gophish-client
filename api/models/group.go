@@ -67,36 +67,9 @@ func GroupFromFile(file string, vars map[string]string) (*Group, error) {
 	if len(group.Targets) == 0 && group.TargetsFile != "" {
 		targetsPath := filepath.Join(parentDir, group.TargetsFile)
 
-		var targets []*Target
-		if filepath.Ext(targetsPath) == ".csv" {
-			targetsFile, err := os.Open(targetsPath)
-			if err != nil {
-				return nil, err
-			}
-			defer targetsFile.Close()
-
-			err = gocsv.Unmarshal(targetsFile, &targets)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(targets) == 0 {
-				targetsFile.Seek(0, 0)
-				err = gocsv.UnmarshalWithoutHeaders(targetsFile, &targets)
-				if err != nil {
-					return nil, err
-				}
-			}
-		} else {
-			bytes, err := os.ReadFile(targetsPath)
-			if err != nil {
-				return nil, err
-			}
-
-			err = yaml.Unmarshal(bytes, &targets)
-			if err != nil {
-				return nil, err
-			}
+		targets, err := TargetsFromFile(targetsPath)
+		if err != nil {
+			return nil, err
 		}
 
 		group.Targets = targets
@@ -108,6 +81,42 @@ func GroupFromFile(file string, vars map[string]string) (*Group, error) {
 	}
 
 	return &group, nil
+}
+
+func TargetsFromFile(file string) ([]*Target, error) {
+	var targets []*Target
+	if filepath.Ext(file) == ".csv" {
+		targetsFile, err := os.Open(file)
+		if err != nil {
+			return nil, err
+		}
+		defer targetsFile.Close()
+
+		err = gocsv.Unmarshal(targetsFile, &targets)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(targets) == 0 {
+			targetsFile.Seek(0, 0)
+			err = gocsv.UnmarshalWithoutHeaders(targetsFile, &targets)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		bytes, err := os.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(bytes, &targets)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return targets, nil
 }
 
 type Target struct {
