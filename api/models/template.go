@@ -19,7 +19,7 @@ const (
 type Template struct {
 	ID             int64           `json:"id" yaml:"-"`
 	Name           string          `json:"name" yaml:"name"`
-	EnvelopeSender string          `json:"envelope_sender" yaml:"-"`
+	EnvelopeSender string          `json:"envelope_sender" yaml:"envelope-sender,omitempty"`
 	Subject        string          `json:"subject" yaml:"subject"`
 	Text           string          `json:"text,omitempty" yaml:"text,omitempty"`
 	TextFile       string          `json:"-" yaml:"text-file,omitempty"`
